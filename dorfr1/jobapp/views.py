@@ -1,8 +1,8 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from jobapp.models import Job, Service, Job_Service
-from jobapp.serializers import jobSerializer, ServiceSerializer, Job_ServiceSerializer
+from jobapp.models import Job, Service, Job_Service, Address
+from jobapp.serializers import jobSerializer, ServiceSerializer, Job_ServiceSerializer, AddressSerializer
 
 
 @api_view(['GET', 'POST'])
@@ -117,4 +117,47 @@ def Job_Service_detail(request, pk):
 
     elif request.method == 'DELETE':
         Job_Services.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+# Views for Address Handeller
+@api_view(['GET', 'POST'])
+def Address_list(request):
+    if request.method == 'GET':
+        requestedUser = request.GET.get('userId', False)
+        if requestedUser:
+            adr = Address.objects.filter(user_id = requestedUser)
+            serializer = AddressSerializer(adr, many=True)
+            return Response(serializer.data)
+        else:
+            adr = Address.objects.all()
+            serializer = AddressSerializer(adr, many=True)
+            return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = AddressSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def Address_detail(request, pk):
+    try:
+        adr = Address.objects.get(pk=pk)
+    except adr.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = AddressSerializer(adr)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = AddressSerializer(adr, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        adr.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
